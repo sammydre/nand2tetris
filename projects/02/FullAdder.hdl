@@ -13,5 +13,22 @@ CHIP FullAdder {
         carry;   // Left bit of a + b + c
 
     PARTS:
-    // Put you code here:
+        // 000 00
+        // 001 10
+        // 010 10
+        // 011 01
+
+        // 100 10
+        // 101 01
+        // 110 01
+        // 111 11
+
+        HalfAdder(a=a, b=b, sum=ha1, carry=ca1);
+
+        // Lower order bit
+        HalfAdder(a=ha1, b=c, sum=sum, carry=ca2);
+
+        // We now have ca1 and ca2
+        HalfAdder(a=ca1, b=ca2, sum=carry, carry=ignore);
+
 }
