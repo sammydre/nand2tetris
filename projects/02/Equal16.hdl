@@ -1,0 +1,9 @@
+CHIP Equal16 {
+    IN a[16], b[16];
+    OUT out;
+
+    PARTS:
+        And(a=a[0], b=b[0], out=t0);
+        // And so on
+        And3(a=a[15], b=b[15], c=t15, out=out);
+}

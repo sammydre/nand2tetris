@@ -1,0 +1,10 @@
+CHIP Negate16 {
+    IN in[16];
+    OUT out[16];
+
+    PARTS:
+        Not16(in=in, out=n1);
+        One16(in=in, out=one);
+        Add16(a=n1, b=one, out=out);
+}
+

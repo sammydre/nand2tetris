@@ -42,5 +42,28 @@ CHIP ALU {
         ng; // 1 if (out < 0),  0 otherwise
 
     PARTS:
+        // All of the possible outputs
+        Xor16(a=x, b=x, out=zero);
+        Negate16(in=x, out=negx);
+        Negate16(in=y, out=negy);
+        Add16(a=x, b=y, out=sum);
+        And16(a=x, b=y, out=andd);
+        // And some negative versions where needed
+        Negate16(in=sum, out=negsum);
+        Negate16(in=andd, out=negand);
+        // Selection time
+
+        // build sel
+
+        Mux8Way16(
+          a=zero,
+          b=negx,
+          // etc.
+          sel=sel,
+          out=out);
+
+        // compare to zero
+
+
    // Put you code here:
 }
