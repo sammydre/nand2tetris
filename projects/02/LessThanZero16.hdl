@@ -1,0 +1,8 @@
+CHIP LessThanZero16 {
+    IN in[16];
+    OUT out;
+
+    PARTS:
+    	// All we need to do is check the top bit
+        Or(a=in[15], b=false, out=out);
+}

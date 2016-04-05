@@ -42,28 +42,101 @@ CHIP ALU {
         ng; // 1 if (out < 0),  0 otherwise
 
     PARTS:
-        // All of the possible outputs
         Xor16(a=x, b=x, out=zero);
-        Negate16(in=x, out=negx);
-        Negate16(in=y, out=negy);
-        Add16(a=x, b=y, out=sum);
-        And16(a=x, b=y, out=andd);
-        // And some negative versions where needed
-        Negate16(in=sum, out=negsum);
-        Negate16(in=andd, out=negand);
-        // Selection time
+        Not16(in=x, out=negx);
+        Not16(in=y, out=negy);
+	Not16(in=zero, out=negzero);
 
-        // build sel
+	Busify2(a=zx, b=nx, out=sel1);
+	Mux4Way16(a=x, b=negx, c=zero, d=negzero, sel=sel1, out=x2);
 
-        Mux8Way16(
-          a=zero,
-          b=negx,
-          // etc.
-          sel=sel,
-          out=out);
+	Busify2(a=zy, b=ny, out=sel2);
+	Mux4Way16(a=y, b=negy, c=zero, d=negzero, sel=sel2, out=y2);
 
-        // compare to zero
+        Add16(a=x2, b=y2, out=sum);
+        And16(a=x2, b=y2, out=andd);
+        Not16(in=sum, out=negsum);
+        Not16(in=andd, out=negand);
 
+	Busify2(a=f, b=no, out=sel3);
+	Mux4Way16(a=andd, b=negand, c=sum, d=negsum, sel=sel3, out=tmpout);
 
-   // Put you code here:
+	Equal16(a=tmpout, b=zero, out=zr);
+	LessThanZero16(in=tmpout, out=ng);
+	Or16(a=tmpout, b=zero, out=out);  // Just copying to the output
+
+	// zo,nx,zy,ny,f,no = 
+	//  000000 = x&y
+      	//  000001 = -(x&y)
+	//  000100 = x&-y
+	//  000101 = -(x&-y)
+	//  010000 = (-x)&y
+      	//  010001 = -((-x)&y)
+	//  010100 = -x&-y
+	//  010101 = -(-x&-y)
+	
+	//  000110 = x-y
+	//  010011 = -((-x)+y) = x-y
+	
+	//  000111 = -(x-y) = y-x
+	//  010010 = (-x)+y = y-x
+
+	//  000011 = -(x+y) = -x-y
+	//  010110 = -x-y
+
+	//  000010 = x+y
+	//  010111 = -(-x-y) = x+y
+
+	//  011010 = -x+0 = -x
+	//  011110 = -x-0 = -x
+	//  001111 = -(x-0) = -x
+	//  001011 = -(x+0) = -x
+
+	//  001010 = x+0 = x
+	//  001110 = x-0 = x
+	//  011011 = -(-x+0) = x
+	//  011111 = -(-x-0) = x
+
+	//  001000 = x&0 = 0
+	//  001001 = -(x&0) = 0
+	//  001100 = x&-0 = 0
+	//  001101 = -(x&-0) = 0
+	//  011000 = -x&0 = 0
+	//  011001 = -(-x&0) = 0
+	//  011100 = -x&-0 = 0
+	//  011101 = -(-x&-0) = 0
+	//  100000 = 0&y = 0
+      	//  100001 = -(0&y) = 0
+	//  100100 = 0&-y = 0
+	//  100101 = -(0&-y) = 0
+	//  101000 = 0&0 = 0
+	//  101001 = -(0&0) = 0
+	//  101010 = 0+0 = 0
+	//  101011 = -(0+0) = 0
+	//  101100 = 0&-0 = 0
+	//  101101 = -(0&-0) = 0
+	//  101110 = 0-0 = 0
+	//  101111 = -(0-0) = 0
+	//  111000 = -0&0 = 0
+	//  111001 = -(-x00) = 0
+	//  111010 = -0+0 = -0
+	//  111011 = -(-0+0) = 0
+	//  111100 = -0&-0 = 0
+	//  111101 = -(-0&-0) = 0
+	//  111110 = -0-0 = -0
+	//  111111 = -(-0-0) = 0
+	//  110000 = (-0)&y = 0
+      	//  110001 = -((-0)&y) = 0
+	//  110100 = -0&-y = 0
+	//  110101 = -(-0&-y) = 0
+
+	//  110010 = (-0)+y = y
+	//  110111 = -(-0-y) = y
+	//  100010 = 0+y = y
+	//  100111 = -(0-y) = y
+
+	//  100011 = -(0+y) = -y
+	//  100110 = 0-y = -y
+	//  110011 = -((-0)+y) = -y
+	//  110110 = -0-y = -y
 }

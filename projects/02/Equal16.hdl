@@ -1,9 +1,42 @@
+// The name here is probably a bit confusing, as it reduces
+// to a single bit, rather than giving a 16-bit output.
 CHIP Equal16 {
     IN a[16], b[16];
     OUT out;
 
     PARTS:
-        And(a=a[0], b=b[0], out=t0);
-        // And so on
-        And3(a=a[15], b=b[15], c=t15, out=out);
+    	// Map
+        Equal(a=a[0],  b=b[0],  out=t0);
+        Equal(a=a[1],  b=b[1],  out=t1);
+        Equal(a=a[2],  b=b[2],  out=t2);
+        Equal(a=a[3],  b=b[3],  out=t3);
+        Equal(a=a[4],  b=b[4],  out=t4);
+        Equal(a=a[5],  b=b[5],  out=t5);
+        Equal(a=a[6],  b=b[6],  out=t6);
+        Equal(a=a[7],  b=b[7],  out=t7);
+        Equal(a=a[8],  b=b[8],  out=t8);
+        Equal(a=a[9],  b=b[9],  out=t9);
+        Equal(a=a[10], b=b[10], out=t10);
+        Equal(a=a[11], b=b[11], out=t11);
+        Equal(a=a[12], b=b[12], out=t12);
+        Equal(a=a[13], b=b[13], out=t13);
+        Equal(a=a[14], b=b[14], out=t14);
+        Equal(a=a[15], b=b[15], out=t15);
+
+	// Reduce
+        And(a=t0,  b=t1,  out=r1);
+	And(a=t2,  b=r1,  out=r2);
+	And(a=t3,  b=r2,  out=r3);
+	And(a=t4,  b=r3,  out=r4);
+	And(a=t5,  b=r4,  out=r5);
+	And(a=t6,  b=r5,  out=r6);
+	And(a=t7,  b=r6,  out=r7);
+	And(a=t8,  b=r7,  out=r8);
+	And(a=t9,  b=r8,  out=r9);
+	And(a=t10, b=r9,  out=r10);
+	And(a=t11, b=r10, out=r11);
+	And(a=t12, b=r11, out=r12);
+	And(a=t13, b=r12, out=r13);
+	And(a=t14, b=r13, out=r14);
+	And(a=t15, b=r14, out=out);
 }
