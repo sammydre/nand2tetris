@@ -16,5 +16,18 @@ CHIP PC {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+        Xor16(a=in, b=in, out=zero);
+        One16(out=one);
+
+        //Nand(a=reset, b=load, out=load2);
+        //Nand(a=load2, b=inc, out=load3);
+
+        Or(a=reset, b=load, out=loadreg);
+        Mux16(a=in, b=zero, sel=reset, out=rin);
+        Register(in=rin, load=loadreg, out=rout);
+
+        Not(in=loadreg, out=nlr);
+        And(a=nlr, b=inc, out=doinc);
+
+        Add16(a=rout, b=one, out=add);
 }
