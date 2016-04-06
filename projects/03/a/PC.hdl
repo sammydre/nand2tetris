@@ -18,16 +18,26 @@ CHIP PC {
     PARTS:
         Xor16(a=in, b=in, out=zero);
         One16(out=one);
-
-        //Nand(a=reset, b=load, out=load2);
-        //Nand(a=load2, b=inc, out=load3);
-
-        Or(a=reset, b=load, out=loadreg);
         Mux16(a=in, b=zero, sel=reset, out=rin);
-        Register(in=rin, load=loadreg, out=rout);
 
-        Not(in=loadreg, out=nlr);
-        And(a=nlr, b=inc, out=doinc);
+        // Figure out whether the register is changing
+        Or(a=reset, b=load, out=loadreg1);
+        Or(a=loadreg1, b=inc, out=loadreg);
 
-        Add16(a=rout, b=one, out=add);
+        // Figure out whether we should be reading the
+        // incremented value or another
+        Not(in=reset, out=notreset);
+        Not(in=load, out=notload);
+        And(a=notreset, b=notload, out=not2);
+        And(a=not2, b=inc, out=rinc);
+
+        Mux16(a=rin, b=added, sel=rinc, out=rin2);
+        Register(in=rin2, load=loadreg, out=rout);
+
+        // This one connects back to the mux before the input
+        // of the register.
+        Add16(a=rout, b=one, out=added);
+
+        // Copy to the output
+        Or16(a=rout, b=zero, out=out);
 }
