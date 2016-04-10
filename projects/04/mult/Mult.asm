@@ -6,4 +6,44 @@
 // Multiplies R0 and R1 and stores the result in R2.
 // (R0, R1, R2 refer to RAM[0], RAM[1], and RAM[2], respectively.)
 
-// Put your code here.
+// Pseudo-code of algorithm:
+// R2 = 0
+// while (R0 > 0) {
+//   R2 = R2 + R1
+//   R0 --
+// }
+
+
+// R2 = 0
+@2
+M = 0
+
+(LOOP)
+
+// while (R0 > 0)
+@0
+D = M
+@END
+D ; JLE 
+
+// R2 = R2 + R1
+@2
+D = M
+@1
+D = D + M
+@2
+M = D
+
+// R0--
+
+@0
+D = M - 1
+M = D
+
+// end block
+@LOOP
+0 ; JMP
+
+(END)
+
+
