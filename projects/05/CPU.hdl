@@ -39,5 +39,105 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-    // Put your code here:
+        // See lecture notes, slide 23 for a rough schematic of the CPU
+
+        // Things we need:
+
+        // Mux() - inputs from the instruction, and ALU output
+        // Register_A() - input is from the above
+        // Mux() - inputs from A, and inM
+        // Register_PC() - input is from before above Mux, and reset
+        //               - output to pc
+        // Register_D() - input is ALU output
+        //              - the same input results in addressM output
+        // ALU() - input is from Mux, D register
+        //       - output to outM
+        // 
+        // writeM output comes from a control bit
+
+        // First step is figuring out the instruction decode, so we have a
+        // set of control bits to apply.
+
+
+        // -----------------------------------------------------------------
+        // Instruction decode
+        // "i xx a cccccc ddd jjj"
+        // i: 0= A-instruction, 1=C-instruction
+        // 
+        // A-instructions have a 15-bit constant
+        //
+        // C-instruction:
+        // x: should be set to 1
+        // a/c: comp
+        // d: dest
+        // j: jump
+
+        Not(in=instruction[15], out=aInstruction);
+        Not(in=aInstruction,    out=cInstruction);
+
+        // TODO: figure out selM, whether M is the input to the ALU (as
+        // opposed to A)
+        Not(in=cInstruction, out=selM);  // FIXME
+
+        // TODO: implement instruction decode for this lot
+        Not(in=false, out=aluOptZx);  // FIXME
+        Not(in=false, out=aluOptNx);  // FIXME
+        Not(in=false, out=aluOptZy);  // FIXME
+        Not(in=false, out=aluOptNy);  // FIXME
+        Not(in=false, out=aluOptF);  // FIXME
+        Not(in=false, out=aluOptNo);  // FIXME
+
+        Not(in=false, out=dRegLoad);  // FIXME
+
+        Not(in=false, out=pcLoad);  // FIXME
+        Not(in=false, out=pcInc);  // FIXME
+
+        // -----------------------------------------------------------------
+        // Initial Mux before A
+        // TODO: check selector here (A-instruction?)
+        // TODO: link to the alu output (aluOut)
+
+        Mux16(a=aluOut, b=instruction, sel=aInstruction, out=muxAOut);
+
+        // -----------------------------------------------------------------
+        // A-register: loaded if we are an A-instruction
+
+        ARegister(in=muxAOut, load=aInstruction, out=aRegOut);
+
+        // -----------------------------------------------------------------
+        // Mux before the ALU
+
+        Mux16(a=aRegOut, b=inM, sel=selM, out=aluAMIn);
+
+        // -----------------------------------------------------------------
+        // D-register
+
+        DRegister(in=aluOut, load=dRegLoad, out=dRegOut);
+
+        // -----------------------------------------------------------------
+        // The ALU itself
+
+        ALU(x=dRegOut, y=aluAMIn,
+            zx=aluOptZx,
+            nx=aluOptNx,
+            zy=aluOptZy,
+            ny=aluOptNy,
+            f=aluOptF,
+            no=aluOptNo,
+            out=aluOut,
+            zr=aluOutIsZero,
+            ng=aluOutIsNeg);
+
+        // -----------------------------------------------------------------
+        // Program Counter
+
+        // XXX: not sure about 15/16 bit mismatch in output here
+        PC(in=aRegOut, load=pcLoad, inc=pcInc, reset=reset, out=pc);
+
+        // -----------------------------------------------------------------
+        // Other outputs
+
+        // FIXME: writeM
+        // FIXME: addressM
+
 }

@@ -37,9 +37,7 @@ CHIP Memory {
         // Screen -----------------------------------------------------------
         // Figure out if we're addressing the screen memory map
         Not(in=address[13],     out=addressInScreen1);
-        // Not(in=address[12],     out=addressInScreen2);
         And(a=address[14],      b=addressInScreen1, out=addressInScreen);
-        // And(a=addressInScreen3, b=addressInScreen2, out=addressInScreen);
 
         And(a=addressInScreen, b=load, out=screenLoad);
 
