@@ -1,0 +1,12 @@
+CHIP Equal4 {
+    IN a, b, c, d;
+    OUT out;
+
+    PARTS:
+        Equal(a=a, b=b, out=a1);
+        Equal(a=c, b=d, out=a2);
+        Equal(a=a, b=c, out=a3);
+        And(a=a1, b=a2, out=a4);
+        And(a=a3, b=a4, out=out);
+}
+

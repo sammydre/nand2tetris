@@ -27,5 +27,59 @@ CHIP Memory {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+        // RAM --------------------------------------------------------------
+        // We only want to access/load RAM if address is < 0x4000
+        Not(in=address[14], out=addressInRam);
+        And(a=load, b=addressInRam, out=ramLoad);
+
+        RAM16K(in=in, load=ramLoad, address=address[0..13], out=ramOut);
+
+        // Screen -----------------------------------------------------------
+        // Figure out if we're addressing the screen memory map
+        Not(in=address[13],     out=addressInScreen1);
+        // Not(in=address[12],     out=addressInScreen2);
+        And(a=address[14],      b=addressInScreen1, out=addressInScreen);
+        // And(a=addressInScreen3, b=addressInScreen2, out=addressInScreen);
+
+        And(a=addressInScreen, b=load, out=screenLoad);
+
+        Screen(in=in, load=screenLoad, address=address[0..12], out=screenOut);
+
+        // Keyboard ---------------------------------------------------------
+        // Figure out if we're addressing the keyboard
+        Equal(a=address[14], b=true,  out=aik1);
+        Equal(a=address[13], b=true,  out=aik2);
+        Equal(a=address[12], b=false, out=aik3);
+        Equal(a=address[11], b=false, out=aik4);
+
+        Equal4(a=address[10], b=address[9], c=address[8], d=false, out=aik5);
+        Equal4(a=address[7],  b=address[6], c=address[5], d=false, out=aik6);
+        Equal4(a=address[4],  b=address[3], c=address[2], d=false, out=aik7);
+        Equal4(a=address[1],  b=address[0], c=false,      d=false, out=aik8);
+
+        And4(a=aik1, b=aik2, c=aik3, d=aik4, out=aik10);
+        And4(a=aik5, b=aik6, c=aik7, d=aik8, out=aik11);
+
+        And(a=aik10, b=aik11, out=addressIsKeyboard);
+
+        Keyboard(out=keyboardOut);
+
+        // Mux out ----------------------------------------------------------
+        
+        Not(in=addressInRam, out=notAddressInRam);
+        Not(in=addressInScreen, out=notAddressInScreen);
+        Not(in=addressIsKeyboard, out=notAddressIsKeyboard);
+        
+        And(a=notAddressInRam, b=notAddressInScreen, out=inv1);
+        And(a=notAddressIsKeyboard, b=inv1, out=addressIsInvalid);
+
+        Or(a=addressInScreen, b=addressIsInvalid, out=sel0);
+        Or(a=addressIsKeyboard, b=addressIsInvalid, out=sel1);
+
+        Xor16(a=in, b=in, out=invalidOut);   // zero
+        
+        Busify2(a=sel1, b=sel0, out=sel);
+
+        Mux4Way16(a=ramOut, b=screenOut, c=keyboardOut, d=invalidOut,
+                  sel=sel, out=out);
 }
