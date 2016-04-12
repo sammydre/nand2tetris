@@ -1,0 +1,6 @@
+CHIP Let {
+    IN in;
+    OUT out;
+    PARTS:
+        Or(a=in, b=false, out=out);
+}

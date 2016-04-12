@@ -1,0 +1,13 @@
+CHIP EqualB3 {
+    IN a[3], b[3];
+    OUT out;
+
+    PARTS:
+        Equal(a=a[0], b=b[0], out=e1);
+        Equal(a=a[1], b=b[1], out=e2);
+        Equal(a=a[2], b=b[2], out=e3);
+        And(a=e1, b=e2, out=e4);
+        And(a=e4, b=e3, out=out);
+}
+
+

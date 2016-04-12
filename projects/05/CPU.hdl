@@ -41,24 +41,6 @@ CHIP CPU {
     PARTS:
         // See lecture notes, slide 23 for a rough schematic of the CPU
 
-        // Things we need:
-
-        // Mux() - inputs from the instruction, and ALU output
-        // Register_A() - input is from the above
-        // Mux() - inputs from A, and inM
-        // Register_PC() - input is from before above Mux, and reset
-        //               - output to pc
-        // Register_D() - input is ALU output
-        //              - the same input results in addressM output
-        // ALU() - input is from Mux, D register
-        //       - output to outM
-        // 
-        // writeM output comes from a control bit
-
-        // First step is figuring out the instruction decode, so we have a
-        // set of control bits to apply.
-
-
         // -----------------------------------------------------------------
         // Instruction decode
         // "i xx a cccccc ddd jjj"
@@ -72,37 +54,71 @@ CHIP CPU {
         // d: dest
         // j: jump
 
+        // Instruction type
         Not(in=instruction[15], out=aInstruction);
         Not(in=aInstruction,    out=cInstruction);
 
-        // TODO: figure out selM, whether M is the input to the ALU (as
-        // opposed to A)
-        Not(in=cInstruction, out=selM);  // FIXME
+        // Comp
+        Let(in=instruction[12], out=selM);
+        Let(in=instruction[11], out=c1);
+        Let(in=instruction[10], out=c2);
+        Let(in=instruction[9],  out=c3);
+        Let(in=instruction[8],  out=c4);
+        Let(in=instruction[7],  out=c5);
+        Let(in=instruction[6],  out=c6);
 
-        // TODO: implement instruction decode for this lot
-        Not(in=false, out=aluOptZx);  // FIXME
+        // X: D, Y: M/A
+        Let(in=c1, out=aluOptZx);
+        
+        Let(in=c3, out=aluOptZy);
+
+
+
+        Let(in=c6, out=aluOptNo);  // not sure yet
+
         Not(in=false, out=aluOptNx);  // FIXME
-        Not(in=false, out=aluOptZy);  // FIXME
         Not(in=false, out=aluOptNy);  // FIXME
         Not(in=false, out=aluOptF);  // FIXME
-        Not(in=false, out=aluOptNo);  // FIXME
 
-        Not(in=false, out=dRegLoad);  // FIXME
+        // Dest
+        Let(in=instruction[3], out=destM);
+        Let(in=instruction[4], out=destD);
+        Let(in=instruction[5], out=destA);
 
-        Not(in=false, out=pcLoad);  // FIXME
-        Not(in=false, out=pcInc);  // FIXME
+        And(a=destD, b=cInstruction, out=dRegLoad);
+        Or(a=destA,  b=aInstruction, out=aRegLoad);
+        Let(in=destM,                out=writeM);
+
+        // Jump
+        Let(in=instruction[2], out=j1);
+        Let(in=instruction[1], out=j2);
+        Let(in=instruction[0], out=j3);
+
+        Not(in=aluOutIsZero, out=ao1);
+        Not(in=aluOutIsNeg, out=ao2);
+        And(a=ao1, b=ao2, out=aluOutIsPos);
+
+        Busify3(a=j1, b=j2, c=j3, out=jmpCond);
+        Busify3(a=aluOutIsNeg, b=aluOutIsZero, c=aluOutIsPos, out=jmpCond2);
+        EqualB3(a=jmpCond, b=jmpCond2, out=shouldJump1);
+
+        Busify3(a=true, b=true, c=true, out=jmpCond3);
+        EqualB3(a=jmpCond, b=jmpCond3, out=shouldJump2);
+
+        Or(a=shouldJump1, b=shouldJump2, out=shouldJump);
+
+        Let(in=shouldJump, out=pcLoad);
+        Not(in=shouldJump, out=pcInc);
 
         // -----------------------------------------------------------------
         // Initial Mux before A
-        // TODO: check selector here (A-instruction?)
-        // TODO: link to the alu output (aluOut)
 
         Mux16(a=aluOut, b=instruction, sel=aInstruction, out=muxAOut);
 
         // -----------------------------------------------------------------
         // A-register: loaded if we are an A-instruction
 
-        ARegister(in=muxAOut, load=aInstruction, out=aRegOut);
+        ARegister(in=muxAOut, load=aRegLoad, out=aRegOut);
 
         // -----------------------------------------------------------------
         // Mux before the ALU
@@ -117,7 +133,8 @@ CHIP CPU {
         // -----------------------------------------------------------------
         // The ALU itself
 
-        ALU(x=dRegOut, y=aluAMIn,
+        ALU(x=dRegOut,
+            y=aluAMIn,
             zx=aluOptZx,
             nx=aluOptNx,
             zy=aluOptZy,
@@ -132,12 +149,13 @@ CHIP CPU {
         // Program Counter
 
         // XXX: not sure about 15/16 bit mismatch in output here
-        PC(in=aRegOut, load=pcLoad, inc=pcInc, reset=reset, out=pc);
+        PC(in=aRegOut, load=pcLoad, inc=pcInc, reset=reset, out=pc15);
+
+        // FIXME: copy pc15 to pc (15 -> 16 bit conversion required!)
 
         // -----------------------------------------------------------------
         // Other outputs
 
-        // FIXME: writeM
         // FIXME: addressM
 
 }

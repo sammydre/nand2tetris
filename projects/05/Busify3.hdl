@@ -1,0 +1,9 @@
+CHIP Busify3 {
+    IN a, b, c;
+    OUT out[3];
+    PARTS:
+        Or(a=a, b=false, out=out[2]);
+        Or(a=b, b=false, out=out[1]);
+        Or(a=c, b=false, out=out[0]);
+}
+
