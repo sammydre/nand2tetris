@@ -1,0 +1,21 @@
+CHIP Narrow16to15 {
+    IN in[16];
+    OUT out[15];
+    PARTS:
+        Let(in=in[0], out=out[0]);
+        Let(in=in[1], out=out[1]);
+        Let(in=in[2], out=out[2]);
+        Let(in=in[3], out=out[3]);
+        Let(in=in[4], out=out[4]);
+        Let(in=in[5], out=out[5]);
+        Let(in=in[6], out=out[6]);
+        Let(in=in[7], out=out[7]);
+        Let(in=in[8], out=out[8]);
+        Let(in=in[9], out=out[9]);
+        Let(in=in[10], out=out[10]);
+        Let(in=in[11], out=out[11]);
+        Let(in=in[12], out=out[12]);
+        Let(in=in[13], out=out[13]);
+        Let(in=in[14], out=out[14]);
+        // in[15] ignored
+}

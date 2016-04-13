@@ -59,7 +59,7 @@ CHIP CPU {
         Not(in=aInstruction,    out=cInstruction);
 
         // Comp
-        Let(in=instruction[12], out=selM);
+        Let(in=instruction[12], out=cA);
         Let(in=instruction[11], out=c1);
         Let(in=instruction[10], out=c2);
         Let(in=instruction[9],  out=c3);
@@ -67,18 +67,15 @@ CHIP CPU {
         Let(in=instruction[7],  out=c5);
         Let(in=instruction[6],  out=c6);
 
+        And(a=cA, b=cInstruction, out=selM);
+
         // X: D, Y: M/A
         Let(in=c1, out=aluOptZx);
-        
+        Let(in=c2, out=aluOptNx);
         Let(in=c3, out=aluOptZy);
-
-
-
-        Let(in=c6, out=aluOptNo);  // not sure yet
-
-        Not(in=false, out=aluOptNx);  // FIXME
-        Not(in=false, out=aluOptNy);  // FIXME
-        Not(in=false, out=aluOptF);  // FIXME
+        Let(in=c4, out=aluOptNy);
+        Let(in=c5, out=aluOptF);
+        Let(in=c6, out=aluOptNo);
 
         // Dest
         Let(in=instruction[3], out=destM);
@@ -87,7 +84,7 @@ CHIP CPU {
 
         And(a=destD, b=cInstruction, out=dRegLoad);
         Or(a=destA,  b=aInstruction, out=aRegLoad);
-        Let(in=destM,                out=writeM);
+        And(a=destM, b=cInstruction, out=writeM);
 
         // Jump
         Let(in=instruction[2], out=j1);
@@ -120,6 +117,8 @@ CHIP CPU {
 
         ARegister(in=muxAOut, load=aRegLoad, out=aRegOut);
 
+        Narrow16to15(in=aRegOut, out=addressM);
+
         // -----------------------------------------------------------------
         // Mux before the ALU
 
@@ -149,13 +148,7 @@ CHIP CPU {
         // Program Counter
 
         // XXX: not sure about 15/16 bit mismatch in output here
-        PC(in=aRegOut, load=pcLoad, inc=pcInc, reset=reset, out=pc15);
+        PC(in=aRegOut, load=pcLoad, inc=pcInc, reset=reset, out=pcOut);
 
-        // FIXME: copy pc15 to pc (15 -> 16 bit conversion required!)
-
-        // -----------------------------------------------------------------
-        // Other outputs
-
-        // FIXME: addressM
-
+        Narrow16to15(in=pcOut, out=pc);
 }
