@@ -95,17 +95,45 @@ CHIP CPU {
         Not(in=aluOutIsNeg, out=ao2);
         And(a=ao1, b=ao2, out=aluOutIsPos);
 
+        // If the jump matches exactly: (JLT, JGT, JEQ)
         Busify3(a=j1, b=j2, c=j3, out=jmpCond);
         Busify3(a=aluOutIsNeg, b=aluOutIsZero, c=aluOutIsPos, out=jmpCond2);
         EqualB3(a=jmpCond, b=jmpCond2, out=shouldJump1);
 
+        // If its a jump with no condition (JMP)
         Busify3(a=true, b=true, c=true, out=jmpCond3);
         EqualB3(a=jmpCond, b=jmpCond3, out=shouldJump2);
 
-        Or(a=shouldJump1, b=shouldJump2, out=shouldJump);
+        // If its a not-equal jump (JNE)
+        Busify3(a=true, b=false, c=true, out=jmpCond4);
+        EqualB3(a=jmpCond, b=jmpCond4, out=jumpIsNotEqual);
+        Not(in=aluOutIsZero, out=aluOutIsNotZero);
+        And(a=jumpIsNotEqual, b=aluOutIsNotZero, out=shouldJump3);
 
-        Let(in=shouldJump, out=pcLoad);
-        Not(in=shouldJump, out=pcInc);
+        // JLE
+        Busify3(a=true, b=true, c=false, out=jmpCond5);
+        EqualB3(a=jmpCond, b=jmpCond5, out=jumpIsLessOrEqual);
+        Or(a=aluOutIsZero, b=aluOutIsNeg, out=aluOutIsLessOrEqual);
+        And(a=jumpIsLessOrEqual, b=aluOutIsLessOrEqual, out=shouldJump4);
+
+        // JGE
+        Busify3(a=false, b=true, c=true, out=jmpCond6);
+        EqualB3(a=jmpCond, b=jmpCond6, out=jumpIsGreatOrEqual);
+        Or(a=aluOutIsZero, b=aluOutIsPos, out=aluOutIsGreatOrEqual);
+        And(a=jumpIsGreatOrEqual, b=aluOutIsGreatOrEqual, out=shouldJump5);
+        
+
+        Or(a=shouldJump1, b=shouldJump2, out=sj1);
+        Or(a=shouldJump3, b=shouldJump4, out=sj2);
+        Let(in=shouldJump5, out=sj3);
+
+        Or(a=sj1,         b=sj2,         out=sj100);
+        Or(a=sj100,       b=sj3,         out=shouldJump);
+
+        And(a=shouldJump, b=cInstruction, out=pcLoad);
+
+        Not(in=pcLoad, out=pcMightInc);
+        Or(a=pcMightInc, b=aInstruction, out=pcInc);
 
         // -----------------------------------------------------------------
         // Initial Mux before A
@@ -144,6 +172,10 @@ CHIP CPU {
             zr=aluOutIsZero,
             ng=aluOutIsNeg);
 
+        // Copy to outM
+        Not16(in=aluOut, out=aluOutNot);
+        Not16(in=aluOutNot, out=outM);
+
         // -----------------------------------------------------------------
         // Program Counter
 
@@ -151,4 +183,6 @@ CHIP CPU {
         PC(in=aRegOut, load=pcLoad, inc=pcInc, reset=reset, out=pcOut);
 
         Narrow16to15(in=pcOut, out=pc);
+
+
 }
