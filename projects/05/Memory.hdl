@@ -74,7 +74,7 @@ CHIP Memory {
         Or(a=addressInScreen, b=addressIsInvalid, out=sel0);
         Or(a=addressIsKeyboard, b=addressIsInvalid, out=sel1);
 
-        Xor16(a=in, b=in, out=invalidOut);   // zero
+        Xor16(a=ramOut, b=ramOut, out=invalidOut);   // zero
         
         Busify2(a=sel1, b=sel0, out=sel);
 
