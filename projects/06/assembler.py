@@ -1,5 +1,36 @@
 import sys
 
+symbol_table = {
+    'R0': 0,
+    'R1': 1,
+    'R2': 2,
+    'R3': 3,
+    'R4': 4,
+    'R5': 5,
+    'R6': 6,
+    'R7': 7,
+    'R8': 8,
+    'R9': 9,
+    'R10': 10,
+    'R11': 11,
+    'R12': 12,
+    'R13': 13,
+    'R14': 14,
+    'R15': 15,
+    'SP': 0,
+    'LCL': 1,
+    'ARG': 2,
+    'THIS': 3,
+    'THAT': 4,
+    'SCREEN': 16384,
+    'KBD': 24576
+}
+
+class NoSuchSymbolError(Exception):
+    def __init__(self, symbol):
+        super(Exception, self).__init__('No such symbol: "%s"' % symbol)
+        self.symbol = symbol
+
 def is_int(x):
     try:
         int(x)
@@ -17,7 +48,10 @@ def a_instruction(l):
     if is_int(symbol):
         return '0' + binstr15(int(symbol))
 
-    raise Exception('TODO')
+    if symbol in symbol_table:
+        return '0' + binstr15(symbol_table[symbol])
+
+    raise NoSuchSymbolError(symbol)
 
 def c_instruction(l):
 
@@ -97,7 +131,19 @@ def c_instruction(l):
 
     return '111%(comp)s%(dest)s%(jump)s' % locals()
 
-def do_line(l):
+def define_symbol(l, address):
+    assert l.endswith(')')
+
+    symbol = l[1:-1]
+
+    if symbol in symbol_table:
+        if address != symbol_table[symbol]:
+            raise 'Internal inconsistency'
+
+    symbol_table[symbol] = address
+    return
+
+def do_line(l, address):
     l = l.strip()
 
     if not l:
@@ -107,9 +153,43 @@ def do_line(l):
     if l.startswith('//'):
         return
 
+    # no whitespace allowed in assembly right now (is that right??)
+    l = l.split()[0]
+
+    if l.startswith('('):
+        return define_symbol(l, address)
+
     if l[0] == '@':
         return a_instruction(l)
     return c_instruction(l)
+
+def make_symbol_table(f):
+    address = 0
+    for line in f:
+        try:
+            instr = do_line(line, address)
+        except NoSuchSymbolError:
+            instr = 'placeholder'
+
+        if instr:
+            address += 1
+
+def assemble(f):
+    address = 0
+    variable_addr = 16
+    for line in f:
+        try:
+            instr = do_line(line, address)
+        except NoSuchSymbolError, e:
+            symbol_table[e.symbol] = variable_addr
+            variable_addr += 1
+            instr = do_line(line, address)
+
+        if instr is None:
+            continue
+
+        print instr
+        address += 1
 
 def main():
     if sys.argv[1] == '-':
@@ -117,15 +197,12 @@ def main():
     else:
         f = open(sys.argv[1], 'r')
 
-    address = 0
-    for line in f:
-        instr = do_line(line)
+    make_symbol_table(f)
 
-        if instr is None:
-            continue
+    f.seek(0)
 
-        print instr
-        address += 1
+    assemble(f)
+
 
 if __name__ == '__main__':
     main()
