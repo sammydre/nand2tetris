@@ -56,6 +56,41 @@ class CodeGen(object):
         else:
             assert False
 
+    def _emit_pop_local(self, carg):
+        assert len(carg) == 1
+        # Locals addressed from register 'LCL'
+        # Arg is the index, so we want to store to RAM[LCL+arg]
+
+        self._e('@LCL  // pop local')
+        self._e('D=M')  # LCL base address loaded to D
+        self._e('@%s' % carg[0])
+        self._e('D=A+D')  # Now have address of local
+        self._e('@R13')
+        self._e('M=D')  # save addr to temporary
+        self._e('@SP')
+        self._e('A=M')
+        self._e('D=M')  # Load from stack
+        self._e('@R13')
+        self._e('A=M')
+        self._e('M=D  // almost finished pop local')  # Save to destination
+        self._emit_sp_dec()   # finally pop the stack
+
+        # Things to do:
+        #  - load LCL (@LCL, D=M)
+        #  - load immediate 'arg' (@arg)
+        #  - add: we now have address of destination (D=A+D)
+        #  - save to TempReg (pretty sure we need to still to a reg here)
+        #      @TempReg, M=D
+        #  - load from stack  (@SP, A=M, D=M)
+        #  - store to destination  (@TempReg, A=M, M=D)
+        #  - decrement stack
+
+    def _emit_pop(self, carg):
+        if carg[0] == 'local':
+            self._emit_pop_local(carg[1:])
+        else:
+            assert False
+
     def _emit_op_binary(self, sign):
         # pop the two numbers from the top of the stack and add them together
         # - we skip over the pops, rather read, then read+add, overwrite, and
@@ -111,8 +146,6 @@ class CodeGen(object):
         self._e('A=M')
         # now D=arg2, A=arg1
         
-        # FIXME: consider maximal sized values here (WORD_MAX and WORD_MIN)
-        # and what it means for my arithmetic below
         if cmptor == 'eq':
             self._e('D=D-A')
             self._e('@%s' % label)
@@ -179,6 +212,8 @@ class CodeGen(object):
 
         if ty == Command.C_PUSH:
             self._emit_push(command.fields[1:])
+        elif ty == Command.C_POP:
+            self._emit_pop(command.fields[1:])
         elif ty == Command.C_ARITHMETIC:
             self._emit_arithmetic(command.fields)
         else:
